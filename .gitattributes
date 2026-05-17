@@ -1,0 +1,54 @@
+# Default: normalize line endings to LF
+* text=auto eol=lf
+
+# Windows-specific files use CRLF
+*.wsf text eol=crlf
+
+# Explicitly text
+*.cpp text eol=lf
+*.h text eol=lf
+*.c text eol=lf
+*.pl text eol=lf
+*.pm text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.txt text eol=lf
+*.inc text eol=lf
+*.svg text eol=lf
+*.props text eol=lf
+
+# Eagle Mode config/data formats
+*.emFpPlugin text eol=lf
+*.emVcItem text eol=lf
+*.emFileManTheme text eol=lf
+*.emClock text eol=lf
+*.emFractal text eol=lf
+*.emHmiDemo text eol=lf
+*.emMines text eol=lf
+*.emNetwalk text eol=lf
+*.emOsm text eol=lf
+*.emStocks text eol=lf
+*.emTestPanel text eol=lf
+*.emDiskDrives text eol=lf
+*.emFileLink text eol=lf
+*.PlEx text eol=lf
+*.silchess text eol=lf
+
+# Binary
+*.tga binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.pdf binary
+*.odt binary
+*.ods binary
+*.blend binary
+*.bz2 binary
+*.xbm binary

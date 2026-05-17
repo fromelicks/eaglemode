@@ -1,0 +1,11 @@
+# Build output
+/bin/
+/lib/
+/obj/
+/packages/
+
+# Make system state
+/obj/building_done
+
+# Temp files
+*.tmp
