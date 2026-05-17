@@ -1,0 +1,15 @@
+services:
+  build:
+    build:
+      context: .
+      args:
+        UID: "${UID:-1000}"
+        GID: "${GID:-1000}"
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: build cpus=auto
+    # Override for interactive shell:
+    #   docker compose run --entrypoint sh build
+    # Override for install:
+    #   docker compose run build install dir=/some/path

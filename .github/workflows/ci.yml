@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            debug: "no"
+            label: linux-release
+          - os: ubuntu-latest
+            debug: "yes"
+            label: linux-debug
+          - os: windows-latest
+            debug: "no"
+            label: windows-release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Linux ──────────────────────────────────────────────────────────────
+
+      - name: Set up Docker layer cache (Linux)
+        if: runner.os == 'Linux'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache obj/ (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/cache@v4
+        with:
+          path: obj/
+          key: linux-obj-${{ matrix.debug }}-${{ hashFiles('makers/**', 'src/**', 'include/**') }}
+          restore-keys: linux-obj-${{ matrix.debug }}-
+
+      - name: Build Docker image (Linux)
+        if: runner.os == 'Linux'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: eaglemode-build:latest
+          build-args: |
+            UID=1001
+            GID=1001
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build EagleMode (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            eaglemode-build:latest \
+            build debug=${{ matrix.debug }} cpus=auto continue=no
+
+      - name: Install EagleMode (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            eaglemode-build:latest \
+            install dir=/workspace/dist/eaglemode
+
+      # ── Windows ────────────────────────────────────────────────────────────
+
+      - name: Set up MSYS2/MinGW64 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          cache: true
+          # Use mingw-w64-x86_64-perl (not base perl) so $Config{osname} == 'MSWin32',
+          # which is what the EagleMode makers check to select the Windows code paths.
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-perl
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-libjpeg-turbo
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-libtiff
+            mingw-w64-x86_64-libwebp
+            mingw-w64-x86_64-librsvg
+            mingw-w64-x86_64-poppler
+            mingw-w64-x86_64-gtk3
+            mingw-w64-x86_64-freetype
+            mingw-w64-x86_64-vlc
+
+      - name: Cache obj/ (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: obj/
+          key: windows-obj-${{ matrix.debug }}-${{ hashFiles('makers/**', 'src/**', 'include/**') }}
+          restore-keys: windows-obj-${{ matrix.debug }}-
+
+      - name: Build EagleMode (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: perl make.pl build debug=${{ matrix.debug }} cpus=auto continue=no
+
+      - name: Install EagleMode (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: perl make.pl install dir=dist/eaglemode
+
+      # ── Artifacts (both platforms) ─────────────────────────────────────────
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eaglemode-${{ matrix.label }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: ${{ matrix.debug == 'yes' && 7 || 30 }}
