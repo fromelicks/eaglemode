@@ -1,0 +1,43 @@
+/*
+#[[BEGIN PROPERTIES]]
+# Type = Command
+# Order = 12.0
+# Interpreter = wscript
+# DefaultFor = directory
+# Caption = Command
+# Descr =Start a command line interpreter where the current working directory
+# Descr =is set to a given directory.
+# Descr =
+# Descr =Selection details:
+# Descr =
+# Descr =  Source: Ignored.
+# Descr =
+# Descr =  Target: The directory to be used as the current working directory.
+# Descr =          If a file is selected as the target, the parent directory
+# Descr =          of that file is used.
+# Icon = terminal.tga
+# Hotkey = Ctrl+T
+#[[END PROPERTIES]]
+*/
+
+var FileSys=WScript.CreateObject("Scripting.FileSystemObject");
+var WshShell=WScript.CreateObject("WScript.Shell");
+var incFile=FileSys.OpenTextFile(WshShell.ExpandEnvironmentStrings(
+	"%EM_DIR%\\res\\emFileMan\\scripts\\cmd-util.js"
+));
+eval(incFile.ReadAll());
+incFile.Close();
+
+ErrorIfNotSingleTarget();
+
+var dir=Tgt[0];
+if (!IsDirectory(dir)) dir=GetParentPath(dir);
+
+WshShell.CurrentDirectory=dir;
+
+var env=WshShell.Environment("PROCESS");
+var interpreter=env("COMSPEC");
+if (interpreter=="") interpreter="cmd";
+
+RestoreOrigPath();
+WshShell.Run(WshShellCmdFromArgs([interpreter]));

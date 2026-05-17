@@ -1,0 +1,8 @@
+#[[BEGIN PROPERTIES]]
+# Type = Group
+# Order = 22.0
+# Directory = StructuredText
+# Caption = Structured Text
+# Descr =Commands for structured text files like HTML, PDF,
+# Descr =PostScript, office documents and so on
+#[[END PROPERTIES]]

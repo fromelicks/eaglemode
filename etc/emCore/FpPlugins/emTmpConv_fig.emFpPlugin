@@ -1,0 +1,17 @@
+#%rec:emFpPlugin%#
+
+FileTypes = { ".fig" }
+FileFormatName = "Xfig"
+Priority = 0.5
+Library = "emTmpConv"
+Function = "emTmpConvFpPluginFunc"
+Properties = {
+ {
+  Name="OutFileEnding"
+  Value=".svg"
+ }
+ {
+  Name="Command"
+  Value="exec fig2dev -L svg < \"$INFILE\"  > \"$OUTFILE\""
+ }
+}

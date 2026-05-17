@@ -1,0 +1,439 @@
+<HTML>
+<HEAD>
+	<TITLE>emCore/emTextField.h</TITLE>
+	<LINK REL="stylesheet" TYPE="text/css" HREF="styles.css">
+	<SCRIPT TYPE="text/javascript" SRC="script.js"></SCRIPT>
+</HEAD>
+<BODY>
+
+<SCRIPT LANGUAGE="JavaScript">TopBar();</SCRIPT>
+<PRE><TT><SPAN CLASS=d><SPAN CLASS=c>//------------------------------------------------------------------------------
+// <A CLASS=m HREF="emCore_emTextField_h.html#emTextField">emTextField</A>.h
+//
+// Copyright (C) 2005-2010,2014,2016,2018,2021 Oliver Hamann.
+//
+// Homepage: http://eaglemode.sourceforge.net/
+//
+// This program is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License version 3 as published by the
+// Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License version 3 for
+// more details.
+//
+// You should have received a copy of the GNU General Public License version 3
+// along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;.
+//------------------------------------------------------------------------------
+
+</SPAN><SPAN CLASS=p>#ifndef emTextField_h
+#define emTextField_h
+
+#ifndef emClipboard_h
+#include &lt;<A CLASS=f HREF="emCore_emClipboard_h.html">emCore/emClipboard.h</A>&gt;
+#endif
+
+#ifndef emBorder_h
+#include &lt;<A CLASS=f HREF="emCore_emBorder_h.html">emCore/emBorder.h</A>&gt;
+#endif
+
+
+<A NAME="emTextField"></A></SPAN><SPAN CLASS=c>//==============================================================================
+//================================ <A CLASS=m HREF="emCore_emTextField_h.html#emTextField">emTextField</A> =================================
+//==============================================================================
+
+</SPAN><SPAN CLASS=t>class </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A> : <SPAN CLASS=t>public </SPAN><A CLASS=l HREF="emCore_emBorder_h.html#emBorder">emBorder</A> <SPAN CLASS=b>{
+
+</SPAN><SPAN CLASS=t>public</SPAN>:
+
+        <SPAN CLASS=c>// Class for a data field panel showing a single line of text which can
+        // optionally be edited by the user. An optional multi-line mode is also
+        // provided. Selection and clipboard functions are supported.
+
+        </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>(
+                ParentArg parent, <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; name,
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; caption=<A CLASS=l HREF="emCore_emString_h.html#emString">emString</A>(),
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; description=<A CLASS=l HREF="emCore_emString_h.html#emString">emString</A>(),
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emImage_h.html#emImage">emImage</A> &amp; icon=<A CLASS=l HREF="emCore_emImage_h.html#emImage">emImage</A>(),
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; text=<A CLASS=l HREF="emCore_emString_h.html#emString">emString</A>(),
+                <SPAN CLASS=t>bool </SPAN>editable=<SPAN CLASS=k>false
+        </SPAN>);
+                <SPAN CLASS=c>// Constructor.
+                // Arguments:
+                //   parent      - Parent for this panel (<A CLASS=m HREF="emCore_emPanel_h.html#emPanel">emPanel</A> or <A CLASS=m HREF="emCore_emView_h.html#emView">emView</A>).
+                //   name        - The name for this panel.
+                //   caption     - The label's caption, or empty.
+                //   description - The label's description, or empty.
+                //   icon        - The label's icon, or empty.
+                //   editable    - Whether the text can be edited by the user.
+
+        </SPAN><SPAN CLASS=t>virtual </SPAN>~<A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>();
+                <SPAN CLASS=c>// Destructor.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>IsEditable() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetEditable(<SPAN CLASS=t>bool </SPAN>editable=<SPAN CLASS=k>true</SPAN>);
+                <SPAN CLASS=c>// Whether the text can be edited by the user.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>GetMultiLineMode() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetMultiLineMode(<SPAN CLASS=t>bool </SPAN>multiLineMode=<SPAN CLASS=k>true</SPAN>);
+                <SPAN CLASS=c>// Whether the text may have multiple lines.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>GetPasswordMode() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetPasswordMode(<SPAN CLASS=t>bool </SPAN>passwordMode=<SPAN CLASS=k>true</SPAN>);
+                <SPAN CLASS=c>// Whether the text is a password that should not really be
+                // shown.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>GetOverwriteMode() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetOverwriteMode(<SPAN CLASS=t>bool </SPAN>overwriteMode=<SPAN CLASS=k>true</SPAN>);
+                <SPAN CLASS=c>// Current mode of overwriting or inserting (can be changed with
+                // the insert key).
+
+        </SPAN><SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; GetTextSignal() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Signaled whenever the text has changed.
+
+        </SPAN><SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; GetText() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetText(<SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; text);
+                <SPAN CLASS=c>// The text.
+
+        </SPAN><SPAN CLASS=t>int </SPAN>GetTextLen() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Get number of bytes in the text.
+
+        </SPAN><SPAN CLASS=t>int </SPAN>GetCursorIndex() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetCursorIndex(<SPAN CLASS=t>int </SPAN>index);
+                <SPAN CLASS=c>// Position of cursor as a byte index to the text.
+
+        </SPAN><SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; GetSelectionSignal() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Signaled whenever the selection has changed.
+
+        </SPAN><SPAN CLASS=t>int </SPAN>GetSelectionStartIndex() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Get start of selection as a byte index to the text.
+
+        </SPAN><SPAN CLASS=t>int </SPAN>GetSelectionEndIndex() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Get end of selection as an exclusive byte index to the text.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>IsSelectionEmpty() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>//  Whether the selection is empty.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>Select(<SPAN CLASS=t>int </SPAN>startIndex, <SPAN CLASS=t>int </SPAN>endIndex, <SPAN CLASS=t>bool </SPAN>publish);
+                <SPAN CLASS=c>// Set the selection.
+                // Arguments:
+                //   startIndex  - Start as a byte index to the text.
+                //   endIndex    - End as an exclusive byte index to the text.
+                //   publish     - Whether to publish the selection.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>SelectAll(<SPAN CLASS=t>bool </SPAN>publish);
+                <SPAN CLASS=c>// Select the whole text.
+                // Arguments:
+                //   publish - Whether to publish the selection.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>EmptySelection();
+                <SPAN CLASS=c>// Empty the selection.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>PublishSelection();
+                <SPAN CLASS=c>// Publish the current selection.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>CutSelectedTextToClipboard();
+                <SPAN CLASS=c>// Remove the selected text and put it to the clipboard.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>CopySelectedTextToClipboard();
+                <SPAN CLASS=c>// Copy the selected text to the clipboard.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>PasteSelectedTextFromClipboard();
+                <SPAN CLASS=c>// Paste selected text from the clipboard. If the selection is
+                // empty, the text from the clipboard is inserted at the cursor
+                // position. Otherwise the selected text is replaced.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>PasteSelectedText(<SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; text);
+                <SPAN CLASS=c>// Paste selected text. If the selection is empty, the given
+                // text is inserted at the cursor position. Otherwise the
+                // selected text is replaced.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>DeleteSelectedText();
+                <SPAN CLASS=c>// Remove the selected text.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>IsCursorBlinkOn() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Whether the cursor is shown at this moment.
+
+        </SPAN><SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; GetCanUndoRedoSignal() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Signaled whenever the result of CanUndo() or CanRedo() has changed.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>CanUndo() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Whether there is at least one entry in the undo buffer.
+
+        </SPAN><SPAN CLASS=t>bool </SPAN>CanRedo() <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// Whether there is at least one entry in the redo buffer.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>Undo();
+                <SPAN CLASS=c>// Undo last change if possible.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>Redo();
+                <SPAN CLASS=c>// Redo last undone change if possible.
+
+        </SPAN><SPAN CLASS=t>virtual bool </SPAN>Validate(<SPAN CLASS=t>int </SPAN>&amp; pos, <SPAN CLASS=t>int </SPAN>&amp; removeLen, <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText) <SPAN CLASS=t>const</SPAN>;
+                <SPAN CLASS=c>// This method is called whenever the text is about to change
+                // (except by SetText(..)). The implementation may either accept
+                // the change (return true), adapt it (modify pos, removeLen
+                // and/or insertText, and return true), or reject the change
+                // (return false). The default implementation uses the callback
+                // function set with SetValidateFunc(..).
+                // Arguments:
+                //   pos        - Byte index where the text is changed.
+                //   removeLen  - How many bytes to remove at position pos.
+                //   insertText - The text to be inserted at position pos.
+                // Returns:
+                //   true on proceed with the change, false to abort.
+
+        </SPAN><SPAN CLASS=t>void </SPAN>SetValidateFunc(
+                <SPAN CLASS=t>bool</SPAN>(*validateFunc)(
+                        <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A> &amp; textField, <SPAN CLASS=t>int </SPAN>&amp; pos, <SPAN CLASS=t>int </SPAN>&amp; removeLen,
+                        <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText, <SPAN CLASS=t>void </SPAN>* context
+                ),
+                <SPAN CLASS=t>void </SPAN>* context=<SPAN CLASS=u>NULL
+        </SPAN>);
+                <SPAN CLASS=c>// Set a validate function. The arguments to the function are
+                // like Validate(..). The context can be any pointer, it is
+                // forwarded to the function.
+
+</SPAN><SPAN CLASS=t>protected</SPAN>:
+
+        <SPAN CLASS=t>virtual void </SPAN>TextChanged();
+                <SPAN CLASS=c>// Called when the text has changed.
+
+        </SPAN><SPAN CLASS=t>virtual void </SPAN>SelectionChanged();
+                <SPAN CLASS=c>// Called when the selection has changed.
+
+        </SPAN><SPAN CLASS=t>virtual bool </SPAN>Cycle();
+        <SPAN CLASS=t>virtual void </SPAN>Notice(NoticeFlags flags);
+        <SPAN CLASS=t>virtual void </SPAN>Input(<A CLASS=l HREF="emCore_emInput_h.html#emInputEvent">emInputEvent</A> &amp; event, <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emInput_h.html#emInputState">emInputState</A> &amp; state,
+                           <SPAN CLASS=t>double </SPAN>mx, <SPAN CLASS=t>double </SPAN>my);
+
+        <SPAN CLASS=t>virtual bool </SPAN>HasHowTo() <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>virtual </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> GetHowTo() <SPAN CLASS=t>const</SPAN>;
+
+        <SPAN CLASS=t>virtual void </SPAN>PaintContent(
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emPainter_h.html#emPainter">emPainter</A> &amp; painter, <SPAN CLASS=t>double </SPAN>x, <SPAN CLASS=t>double </SPAN>y, <SPAN CLASS=t>double </SPAN>w,
+                <SPAN CLASS=t>double </SPAN>h, <A CLASS=l HREF="emCore_emColor_h.html#emColor">emColor</A> canvasColor
+        ) <SPAN CLASS=t>const</SPAN>;
+
+        <SPAN CLASS=t>virtual bool </SPAN>CheckMouse(<SPAN CLASS=t>double </SPAN>mx, <SPAN CLASS=t>double </SPAN>my,
+                                <SPAN CLASS=t>double </SPAN>* pCol, <SPAN CLASS=t>double </SPAN>* pRow) <SPAN CLASS=t>const</SPAN>;
+
+        <SPAN CLASS=c>// - - - - - - - - - - Depreciated methods - - - - - - - - - - - - - - -
+        // The following virtual non-const methods have been replaced by const
+        // methods (see above). The old versions still exist here with the
+        // "final" keyword added, so that old overridings will fail to compile.
+        // If you run into this, please adapt your overridings by adding "const".
+        </SPAN><SPAN CLASS=t>virtual bool </SPAN>CheckMouse(<SPAN CLASS=t>double </SPAN>mx, <SPAN CLASS=t>double </SPAN>my,
+                                <SPAN CLASS=t>double </SPAN>* pCol, <SPAN CLASS=t>double </SPAN>* pRow) final;
+        <SPAN CLASS=c>// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+</SPAN><SPAN CLASS=t>private</SPAN>:
+
+        <SPAN CLASS=t>struct </SPAN>UndoEntry <SPAN CLASS=b>{
+                </SPAN>UndoEntry * Prev;
+                UndoEntry * Next;
+                <SPAN CLASS=t>int </SPAN>Pos;
+                <SPAN CLASS=t>int </SPAN>RemoveLen;
+                <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> InsertText;
+        <SPAN CLASS=b>}</SPAN>;
+
+        <SPAN CLASS=t>struct </SPAN>RedoEntry <SPAN CLASS=b>{
+                </SPAN>RedoEntry * Next;
+                <SPAN CLASS=t>int </SPAN>Pos;
+                <SPAN CLASS=t>int </SPAN>RemoveLen;
+                <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> InsertText;
+        <SPAN CLASS=b>}</SPAN>;
+
+        <SPAN CLASS=t>enum </SPAN>UndoMergeType <SPAN CLASS=b>{
+                </SPAN>UM_NO_MERGE,
+                UM_BACKSPACE,
+                UM_DELETE,
+                UM_ALPHA_NUM,
+                UM_NON_ALPHA_NUM,
+                UM_NEW_LINE,
+                UM_MOVE
+        <SPAN CLASS=b>}</SPAN>;
+
+        <SPAN CLASS=t>enum </SPAN>ModifyFlags <SPAN CLASS=b>{
+                </SPAN>MF_VALIDATE      = <SPAN CLASS=u>1</SPAN>&lt;&lt;<SPAN CLASS=u>0</SPAN>,
+                MF_CREATE_UNDO   = <SPAN CLASS=u>1</SPAN>&lt;&lt;<SPAN CLASS=u>1</SPAN>,
+                MF_CREATE_REDO   = <SPAN CLASS=u>1</SPAN>&lt;&lt;<SPAN CLASS=u>2</SPAN>,
+                MF_NO_CLEAR_REDO = <SPAN CLASS=u>1</SPAN>&lt;&lt;<SPAN CLASS=u>3</SPAN>,
+                MF_SELECT        = <SPAN CLASS=u>1</SPAN>&lt;&lt;<SPAN CLASS=u>4
+        </SPAN><SPAN CLASS=b>}</SPAN>;
+
+        <SPAN CLASS=t>enum </SPAN>DoTextFieldFunc <SPAN CLASS=b>{
+                </SPAN>TEXT_FIELD_FUNC_PAINT,
+                TEXT_FIELD_FUNC_XY2CR,
+                TEXT_FIELD_FUNC_CR2XY
+        <SPAN CLASS=b>}</SPAN>;
+        <SPAN CLASS=t>void </SPAN>DoTextField(
+                DoTextFieldFunc func, <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emPainter_h.html#emPainter">emPainter</A> * painter,
+                <A CLASS=l HREF="emCore_emColor_h.html#emColor">emColor</A> canvasColor,
+                <SPAN CLASS=t>double </SPAN>xIn, <SPAN CLASS=t>double </SPAN>yIn, <SPAN CLASS=t>double </SPAN>* pXOut, <SPAN CLASS=t>double </SPAN>* pYOut, <SPAN CLASS=t>bool </SPAN>* pHit
+        ) <SPAN CLASS=t>const</SPAN>;
+
+        <SPAN CLASS=t>void </SPAN>ClearUndo();
+        <SPAN CLASS=t>void </SPAN>ClearRedo();
+        <SPAN CLASS=t>void </SPAN>CreateUndo(<SPAN CLASS=t>int </SPAN>pos, <SPAN CLASS=t>int </SPAN>removeLen, <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText,
+                        UndoMergeType undoMerge);
+        <SPAN CLASS=t>void </SPAN>CreateRedo(<SPAN CLASS=t>int </SPAN>pos, <SPAN CLASS=t>int </SPAN>removeLen, <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText);
+        <SPAN CLASS=t>void </SPAN>ModifySelectedText(<SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText, <SPAN CLASS=t>int </SPAN>modifyFlags,
+                                UndoMergeType undoMerge=UM_NO_MERGE);
+        <SPAN CLASS=t>void </SPAN>ModifyText(<SPAN CLASS=t>int </SPAN>pos, <SPAN CLASS=t>int </SPAN>removeLen, <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> insertText,
+                        <SPAN CLASS=t>int </SPAN>modifyFlags, UndoMergeType undoMerge=UM_NO_MERGE);
+
+        <SPAN CLASS=t>enum </SPAN>DragModeType <SPAN CLASS=b>{
+                </SPAN>DM_NONE,
+                DM_SELECT,
+                DM_SELECT_BY_WORDS,
+                DM_SELECT_BY_ROWS,
+                DM_INSERT,
+                DM_MOVE
+        <SPAN CLASS=b>}</SPAN>;
+        <SPAN CLASS=t>void </SPAN>SetDragMode(DragModeType dragMode);
+
+        <SPAN CLASS=t>void </SPAN>RestartCursorBlinking();
+        <SPAN CLASS=t>void </SPAN>ScrollToCursor();
+        <SPAN CLASS=t>int </SPAN>ColRow2Index(<SPAN CLASS=t>double </SPAN>column, <SPAN CLASS=t>double </SPAN>row, <SPAN CLASS=t>bool </SPAN>forCursor) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>Index2ColRow(<SPAN CLASS=t>int </SPAN>index, <SPAN CLASS=t>int </SPAN>* pColumn, <SPAN CLASS=t>int </SPAN>* pRow) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>CalcTotalColsRows(<SPAN CLASS=t>int </SPAN>* pCols, <SPAN CLASS=t>int </SPAN>* pRows) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNormalizedIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>void </SPAN>ModifySelection(<SPAN CLASS=t>int </SPAN>oldIndex, <SPAN CLASS=t>int </SPAN>newIndex, <SPAN CLASS=t>bool </SPAN>publish);
+        emMBState GetMBStateAtIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNextIndex(<SPAN CLASS=t>int </SPAN>index, emMBState * mbState=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetPrevIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNextWordBoundaryIndex(<SPAN CLASS=t>int </SPAN>index, <SPAN CLASS=t>bool </SPAN>* pIsDelimiter=<SPAN CLASS=u>NULL</SPAN>,
+                                     emMBState * mbState=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetPrevWordBoundaryIndex(<SPAN CLASS=t>int </SPAN>index, <SPAN CLASS=t>bool </SPAN>* pIsDelimiter=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNextWordIndex(<SPAN CLASS=t>int </SPAN>index, emMBState * mbState=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetPrevWordIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetRowStartIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetRowEndIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNextRowIndex(<SPAN CLASS=t>int </SPAN>index, emMBState * mbState=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetPrevRowIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetNextParagraphIndex(<SPAN CLASS=t>int </SPAN>index, emMBState * mbState=<SPAN CLASS=u>NULL</SPAN>) <SPAN CLASS=t>const</SPAN>;
+        <SPAN CLASS=t>int </SPAN>GetPrevParagraphIndex(<SPAN CLASS=t>int </SPAN>index) <SPAN CLASS=t>const</SPAN>;
+
+        <A CLASS=l HREF="emCore_emRef_h.html#emRef">emRef</A>&lt;<A CLASS=l HREF="emCore_emClipboard_h.html#emClipboard">emClipboard</A>&gt; Clipboard;
+        <A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> TextSignal;
+        <A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> SelectionSignal;
+        <SPAN CLASS=t>bool </SPAN>Editable;
+        <SPAN CLASS=t>bool </SPAN>MultiLineMode;
+        <SPAN CLASS=t>bool </SPAN>PasswordMode;
+        <SPAN CLASS=t>bool </SPAN>OverwriteMode;
+        <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> Text;
+        <SPAN CLASS=t>int </SPAN>TextLen,CursorIndex,SelectionStartIndex,SelectionEndIndex;
+        <SPAN CLASS=t>int </SPAN>MagicCursorColumn;
+        emInt64 SelectionId;
+        emUInt64 CursorBlinkTime;
+        <SPAN CLASS=t>bool </SPAN>CursorBlinkOn;
+        DragModeType DragMode;
+        <SPAN CLASS=t>double </SPAN>DragPosC,DragPosR;
+
+        UndoEntry * FirstUndo;
+        UndoEntry * LastUndo;
+        size_t UndoSize;
+        <SPAN CLASS=t>int </SPAN>UndoCount;
+        UndoMergeType UndoMerge;
+        RedoEntry * FirstRedo;
+        <A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> CanUndoRedoSignal;
+
+        <SPAN CLASS=t>bool</SPAN>(*ValidateFunc)(
+                <SPAN CLASS=t>const </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A> &amp; textField, <SPAN CLASS=t>int </SPAN>&amp; pos, <SPAN CLASS=t>int </SPAN>&amp; removeLen,
+                <A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; insertText, <SPAN CLASS=t>void </SPAN>* context
+        );
+        <SPAN CLASS=t>void </SPAN>* ValidateFuncContext;
+
+        <SPAN CLASS=t>static const char </SPAN>* <SPAN CLASS=t>const </SPAN>HowToTextField;
+        <SPAN CLASS=t>static const char </SPAN>* <SPAN CLASS=t>const </SPAN>HowToMultiLineOff;
+        <SPAN CLASS=t>static const char </SPAN>* <SPAN CLASS=t>const </SPAN>HowToMultiLineOn;
+        <SPAN CLASS=t>static const char </SPAN>* <SPAN CLASS=t>const </SPAN>HowToReadOnly;
+<SPAN CLASS=b>}</SPAN>;
+
+<SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::IsEditable() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>Editable;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetMultiLineMode() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>MultiLineMode;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetPasswordMode() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>PasswordMode;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetOverwriteMode() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>OverwriteMode;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; <A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetTextSignal() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>TextSignal;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline const </SPAN><A CLASS=l HREF="emCore_emString_h.html#emString">emString</A> &amp; <A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetText() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>Text;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline int </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetTextLen() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>TextLen;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline int </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetCursorIndex() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>CursorIndex;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; <A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetSelectionSignal() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>SelectionSignal;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline int </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetSelectionStartIndex() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>SelectionStartIndex;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline int </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetSelectionEndIndex() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>SelectionEndIndex;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::IsSelectionEmpty() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>SelectionStartIndex&gt;=SelectionEndIndex;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::IsCursorBlinkOn() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>CursorBlinkOn;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline const </SPAN><A CLASS=l HREF="emCore_emSignal_h.html#emSignal">emSignal</A> &amp; <A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::GetCanUndoRedoSignal() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>CanUndoRedoSignal;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::CanUndo() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>FirstUndo!=<SPAN CLASS=u>NULL</SPAN>;
+<SPAN CLASS=b>}
+
+</SPAN><SPAN CLASS=t>inline bool </SPAN><A CLASS=l HREF="emCore_emTextField_h.html#emTextField">emTextField</A>::CanRedo() <SPAN CLASS=t>const
+</SPAN><SPAN CLASS=b>{
+        </SPAN><SPAN CLASS=k>return </SPAN>FirstRedo!=<SPAN CLASS=u>NULL</SPAN>;
+<SPAN CLASS=b>}
+
+
+</SPAN><SPAN CLASS=p>#endif
+</SPAN></SPAN></TT></PRE>
+</BODY>
+</HTML>

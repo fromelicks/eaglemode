@@ -1,0 +1,479 @@
+//------------------------------------------------------------------------------
+// emTiffImageFileModel.cpp
+//
+// Copyright (C) 2004-2009,2014,2018-2019,2024-2025 Oliver Hamann.
+//
+// Homepage: http://eaglemode.sourceforge.net/
+//
+// This program is free software: you can redistribute it and/or modify it under
+// the terms of the GNU General Public License version 3 as published by the
+// Free Software Foundation.
+//
+// This program is distributed in the hope that it will be useful, but WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU General Public License version 3 for
+// more details.
+//
+// You should have received a copy of the GNU General Public License version 3
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+//------------------------------------------------------------------------------
+
+#include <stddef.h>
+#include <tiffio.h>
+#include <emTiff/emTiffImageFileModel.h>
+#include <emCore/emThread.h>
+
+
+static emThreadMiniMutex emTiff_ErrorMutex;
+static emThreadId emTiff_ErrorThread;
+static char emTiff_Error[512];
+
+
+static void emTiff_ErrorHandler(const char* module, const char* fmt, va_list ap)
+{
+	emThreadMiniMutex::Locker mutexLocker(emTiff_ErrorMutex);
+	emTiff_ErrorThread=emThread::GetCurrentThreadId();
+	emTiff_Error[sizeof(emTiff_Error)-1]=0;
+
+#	pragma clang diagnostic push
+#	pragma clang diagnostic ignored "-Wformat-nonliteral"
+	vsnprintf(
+		emTiff_Error,
+		sizeof(emTiff_Error)-1,
+		fmt,
+		ap
+	);
+#	pragma clang diagnostic pop
+}
+
+
+static void emTiff_WarningHandler(const char* module, const char* fmt, va_list ap)
+{
+}
+
+
+emRef<emTiffImageFileModel> emTiffImageFileModel::Acquire(
+	emContext & context, const emString & name, bool common
+)
+{
+	EM_IMPL_ACQUIRE(emTiffImageFileModel,context,name,common)
+}
+
+
+emTiffImageFileModel::emTiffImageFileModel(
+	emContext & context, const emString & name
+)
+	: emImageFileModel(context,name)
+{
+	L=NULL;
+	S=NULL;
+}
+
+
+emTiffImageFileModel::~emTiffImageFileModel()
+{
+	emTiffImageFileModel::QuitLoading();
+	emTiffImageFileModel::QuitSaving();
+}
+
+
+void emTiffImageFileModel::TryStartLoading()
+{
+	int samplesPerPixel,bitsPerSample,compression,photometric;
+	emString compStr;
+	char * imageDesc;
+	emUInt32 u32;
+	emUInt16 u16;
+	TIFF * t;
+
+	L=new LoadingState;
+	L->Tif=NULL;
+	L->Tiled=false;
+	L->ImgW=0;
+	L->ImgH=0;
+	L->PartW=0;
+	L->PartH=0;
+	L->Channels=0;
+	L->CurrentX=0;
+	L->CurrentY=0;
+	L->CurrentOp=0;
+
+	{
+		emThreadMiniMutex::Locker mutexLocker(emTiff_ErrorMutex);
+		if (emTiff_ErrorThread==emThread::GetCurrentThreadId()) {
+			strcpy(emTiff_Error,"unknown TIFF error");
+		}
+		TIFFSetErrorHandler(emTiff_ErrorHandler);
+		TIFFSetWarningHandler(emTiff_WarningHandler);
+	}
+
+	t=TIFFOpen(GetFilePath(),"r");
+	if (!t) ThrowTiffError();
+	L->Tif=t;
+
+	TIFFGetFieldDefaulted(t,TIFFTAG_SAMPLESPERPIXEL,&u16);
+	samplesPerPixel=u16;
+	TIFFGetFieldDefaulted(t,TIFFTAG_COMPRESSION,&u16);
+	compression=u16;
+	TIFFGetFieldDefaulted(t,TIFFTAG_PHOTOMETRIC,&u16);
+	photometric=u16;
+	TIFFGetFieldDefaulted(t,TIFFTAG_BITSPERSAMPLE,&u16);
+	bitsPerSample=u16;
+	TIFFGetField(t,TIFFTAG_IMAGEWIDTH,&u32);
+	L->ImgW=(int)u32;
+	TIFFGetField(t,TIFFTAG_IMAGELENGTH,&u32);
+	L->ImgH=(int)u32;
+	L->Tiled=TIFFIsTiled(t)!=0;
+	if (L->Tiled) {
+		TIFFGetFieldDefaulted(t,TIFFTAG_TILEWIDTH,&u32);
+		L->PartW=(int)u32;
+		TIFFGetFieldDefaulted(t,TIFFTAG_TILELENGTH,&u32);
+		L->PartH=(int)u32;
+	}
+	else {
+		L->PartW=L->ImgW;
+		TIFFGetFieldDefaulted(t,TIFFTAG_ROWSPERSTRIP,&u32);
+		L->PartH=(int)u32;
+	}
+	if (
+		L->PartW<1 || L->PartH<1 || L->PartW>0x7fffff || L->PartH>0x7fffff ||
+		L->ImgW<1 || L->ImgH<1 || L->ImgW>0x7fffff || L->ImgH>0x7fffff
+	) {
+		throw emException("Unsupported TIFF file format.");
+	}
+
+	if (samplesPerPixel==1) {
+		if (photometric==3) {
+			L->Channels=3;
+		}
+		else {
+			L->Channels=1;
+		}
+	}
+	else if (samplesPerPixel==2) {
+		L->Channels=2;
+	}
+	else if (samplesPerPixel==3) {
+		L->Channels=3;
+	}
+	else {
+		L->Channels=4;
+	}
+
+	switch (compression) {
+	case 1: compStr="uncompressed"; break;
+	case 2: compStr="CCITT RLE compressed"; break;
+	case 3: compStr="CCITT Group 3 compressed"; break;
+	case 4: compStr="CCITT Group 4 compressed"; break;
+	case 5: compStr="LZW compressed"; break;
+	case 7: compStr="JPEG compressed"; break;
+	case 32773: compStr="PackBits compressed"; break;
+	default: compStr=emString::Format("compression=%d",compression); break;
+	}
+	FileFormatInfo=emString::Format(
+		"TIFF %d-bit %s (%d channels extracted)",
+		samplesPerPixel*bitsPerSample,
+		compStr.Get(),
+		L->Channels
+	);
+
+	imageDesc=NULL;
+	if (TIFFGetField(t,TIFFTAG_IMAGEDESCRIPTION,&imageDesc)==1 && imageDesc) {
+		Comment=imageDesc;
+	}
+
+	Signal(ChangeSignal);
+}
+
+
+bool emTiffImageFileModel::TryContinueLoading()
+{
+	TIFF * t;
+	unsigned char * map, * tgt;
+	emUInt32 * src;
+	emUInt32 pix;
+	int r,x,y,x2,y2;
+
+	// ??? PartW*PartH is often not less than ImgW*ImgH. This could be
+	// solved by using TIFFReadScanline instead of TIFFReadRGBAStrip, but
+	// that requires to do all the low-level color conversion.
+
+	t=(TIFF*)L->Tif;
+
+	if (!L->Buffer) {
+		L->Buffer=new emUInt32[L->PartW*(size_t)L->PartH];
+		Image.Setup(L->ImgW,L->ImgH,L->Channels);
+		Signal(ChangeSignal);
+		return false;
+	}
+
+	if (L->CurrentOp==0) {
+		if (L->Tiled) {
+			r=TIFFReadRGBATile(t,L->CurrentX,L->CurrentY,L->Buffer);
+		}
+		else {
+			r=TIFFReadRGBAStrip(t,L->CurrentY,L->Buffer);
+		}
+		if (!r) ThrowTiffError();
+		L->CurrentOp=1;
+		return false;
+	}
+
+	x2=L->CurrentX+L->PartW; if (x2>L->ImgW) x2=L->ImgW;
+	y2=L->CurrentY+L->PartH; if (y2>L->ImgH) y2=L->ImgH;
+	map=Image.GetWritableMap();
+	for (y=L->CurrentY; y<y2; y++) {
+		src=L->Buffer+(y2-1-y)*(size_t)L->PartW;
+		tgt=map+(y*(size_t)L->ImgW+L->CurrentX)*L->Channels;
+		switch (L->Channels) {
+		case 1:
+			for (x=L->CurrentX; x<x2; x++) {
+				pix=src[0];
+				tgt[0]=(unsigned char)(
+					(((int)TIFFGetR(pix))+TIFFGetG(pix)+TIFFGetB(pix))/3
+				);
+				src++;
+				tgt++;
+			}
+			break;
+		case 2:
+			for (x=L->CurrentX; x<x2; x++) {
+				pix=src[0];
+				tgt[0]=(unsigned char)(
+					(((int)TIFFGetR(pix))+TIFFGetG(pix)+TIFFGetB(pix))/3
+				);
+				tgt[1]=(unsigned char)TIFFGetA(pix);
+				src++;
+				tgt+=2;
+			}
+			break;
+		case 3:
+			for (x=L->CurrentX; x<x2; x++) {
+				pix=src[0];
+				tgt[0]=(unsigned char)TIFFGetR(pix);
+				tgt[1]=(unsigned char)TIFFGetG(pix);
+				tgt[2]=(unsigned char)TIFFGetB(pix);
+				src++;
+				tgt+=3;
+			}
+			break;
+		case 4:
+			for (x=L->CurrentX; x<x2; x++) {
+				pix=src[0];
+				tgt[0]=(unsigned char)TIFFGetR(pix);
+				tgt[1]=(unsigned char)TIFFGetG(pix);
+				tgt[2]=(unsigned char)TIFFGetB(pix);
+				tgt[3]=(unsigned char)TIFFGetA(pix);
+				src++;
+				tgt+=4;
+			}
+			break;
+		}
+	}
+
+	Signal(ChangeSignal);
+
+	L->CurrentOp=0;
+	L->CurrentX+=L->PartW;
+	if (L->CurrentX>=L->ImgW) {
+		L->CurrentX=0;
+		L->CurrentY+=L->PartH;
+		if (L->CurrentY>=L->ImgH) return true;
+	}
+	return false;
+}
+
+
+void emTiffImageFileModel::QuitLoading()
+{
+	if (L) {
+		if (L->Tif) TIFFClose((TIFF*)L->Tif);
+		delete L;
+		L=NULL;
+	}
+}
+
+
+void emTiffImageFileModel::TryStartSaving()
+{
+	emUInt16 r[256],g[256],b[256];
+	TIFF * t;
+	int i,width,height;
+	emColor c;
+
+	S=new SavingState;
+	S->Tif=NULL;
+	S->PixelSize=0;
+	S->NextY=0;
+
+	{
+		emThreadMiniMutex::Locker mutexLocker(emTiff_ErrorMutex);
+		if (emTiff_ErrorThread==emThread::GetCurrentThreadId()) {
+			strcpy(emTiff_Error,"unknown TIFF error");
+		}
+		TIFFSetErrorHandler(emTiff_ErrorHandler);
+		TIFFSetWarningHandler(emTiff_WarningHandler);
+	}
+
+	t=TIFFOpen(GetFilePath().Get(),"w");
+	if (!t) ThrowTiffError();
+	S->Tif=t;
+
+	width=Image.GetWidth();
+	height=Image.GetHeight();
+
+	S->PixelSize=GetImage().HasAnyNonGreyPixel()?3:1;
+	if (GetImage().HasAnyTransparentPixel()) S->PixelSize++;
+	if (S->PixelSize==3) {
+		S->Pal=GetImage().DetermineAllColorsSorted(256);
+		if (!S->Pal.IsEmpty()) S->PixelSize=1;
+	}
+
+	TIFFSetField(t,TIFFTAG_IMAGEWIDTH,width);
+	TIFFSetField(t,TIFFTAG_IMAGELENGTH,height);
+	TIFFSetField(t,TIFFTAG_BITSPERSAMPLE,8);
+	TIFFSetField(t,TIFFTAG_SAMPLESPERPIXEL,S->PixelSize);
+	TIFFSetField(t,TIFFTAG_PHOTOMETRIC,
+		!S->Pal.IsEmpty() ? PHOTOMETRIC_PALETTE :
+		S->PixelSize<=2 ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB
+	);
+	TIFFSetField(t,TIFFTAG_COMPRESSION,COMPRESSION_LZW);
+	TIFFSetField(t,TIFFTAG_ORIENTATION,ORIENTATION_TOPLEFT);
+	TIFFSetField(t,TIFFTAG_PLANARCONFIG,PLANARCONFIG_CONTIG);
+	TIFFSetField(t,TIFFTAG_ROWSPERSTRIP,TIFFDefaultStripSize(t,0));
+
+	if (!Comment.IsEmpty()) {
+		TIFFSetField(t,TIFFTAG_IMAGEDESCRIPTION,Comment.Get());
+	}
+
+	if (!S->Pal.IsEmpty()) {
+		for (i=0; i<256; i++) {
+			if (i<S->Pal.GetCount()) c=S->Pal[i]; else c=emColor::BLACK;
+			r[i]=c.GetRed()*257;
+			g[i]=c.GetGreen()*257;
+			b[i]=c.GetBlue()*257;
+		}
+		TIFFSetField(t,TIFFTAG_COLORMAP,r,g,b);
+	}
+	else if ((S->PixelSize&1)==0) {
+		uint16_t extraSampleTypes[1]={EXTRASAMPLE_ASSOCALPHA};
+		TIFFSetField(t,TIFFTAG_EXTRASAMPLES,1,extraSampleTypes);
+	}
+
+	S->RowBuf=new emByte[width*S->PixelSize];
+}
+
+
+bool emTiffImageFileModel::TryContinueSaving()
+{
+	emString str;
+	TIFF * t;
+	emByte * p;
+	int i,j,k,x,y,width,height,pixelSize;
+	emColor c;
+
+	t=(TIFF*)S->Tif;
+	height=Image.GetHeight();
+
+	y=S->NextY++;
+	if (y<height) {
+		width=Image.GetWidth();
+		pixelSize=S->PixelSize;
+		p=S->RowBuf;
+		for (x=0; x<width; x++) {
+			c=Image.GetPixel(x,y);
+			if (!S->Pal.IsEmpty()) {
+				for (i=0, j=S->Pal.GetCount(); i<j;) {
+					k=(i+j)/2;
+					if (S->Pal[k].Get()<c.Get()) i=k+1; else j=k;
+				}
+				*p++=(emByte)i;
+			}
+			else {
+				if (pixelSize<=2) {
+					*p++=c.GetGrey();
+				}
+				else {
+					*p++=c.GetRed();
+					*p++=c.GetGreen();
+					*p++=c.GetBlue();
+				}
+				if ((pixelSize&1)==0) *p++=c.GetAlpha();
+			}
+		}
+		if (TIFFWriteScanline(t,S->RowBuf.Get(),y,0)<0) {
+			ThrowTiffError();
+		}
+		return false;
+	}
+
+	if (!TIFFFlush(t)) {
+		ThrowTiffError();
+	}
+
+	str="TIFF";
+	if (FileFormatInfo!=str) {
+		FileFormatInfo=str;
+		Signal(ChangeSignal);
+	}
+
+	return true;
+}
+
+
+void emTiffImageFileModel::QuitSaving()
+{
+	if (S) {
+		if (S->Tif) TIFFClose((TIFF*)S->Tif);
+		delete S;
+		S=NULL;
+	}
+}
+
+
+emUInt64 emTiffImageFileModel::CalcMemoryNeed()
+{
+	if (L) {
+		return
+			((emUInt64)L->PartW)*L->PartH*4 +
+			((emUInt64)L->ImgW)*L->ImgH*L->Channels
+		;
+	}
+	else {
+		return ((emUInt64)Image.GetWidth())*
+		       Image.GetHeight()*
+		       Image.GetChannelCount();
+	}
+}
+
+
+double emTiffImageFileModel::CalcFileProgress()
+{
+	double progress;
+
+	if (L && L->ImgW>0 && L->ImgH>0) {
+		progress=L->CurrentY*(double)L->ImgW+L->CurrentX*(double)L->PartH;
+		if (L->CurrentOp) progress+=0.5*L->PartW*L->PartH;
+		progress*=100.0/L->ImgW/L->ImgH;
+		if (progress<0.0) progress=0.0;
+		else if (progress>100.0) progress=100.0;
+	}
+	else if (S && GetImage().GetHeight()>0) {
+		return 100.0*S->NextY/GetImage().GetHeight();
+	}
+	else {
+		progress=0.0;
+	}
+	return progress;
+}
+
+
+void emTiffImageFileModel::ThrowTiffError()
+{
+	emString str;
+
+	emThreadMiniMutex::Locker mutexLocker(emTiff_ErrorMutex);
+	if (emTiff_ErrorThread==emThread::GetCurrentThreadId()) str=emTiff_Error;
+	else str="unknown TIFF error";
+	throw emException("%s",str.Get());
+}
