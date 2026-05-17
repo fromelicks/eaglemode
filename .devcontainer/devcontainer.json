@@ -1,12 +1,6 @@
 {
   "name": "EagleMode",
   "dockerFile": "../Dockerfile",
-  "build": {
-    "args": {
-      "UID": "${localEnv:UID}",
-      "GID": "${localEnv:GID}"
-    }
-  },
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "remoteUser": "builder",

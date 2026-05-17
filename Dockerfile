@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM debian:bullseye-slim
 
 ARG UID=1000
 ARG GID=1000
