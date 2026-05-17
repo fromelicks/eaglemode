@@ -19,6 +19,7 @@
 //------------------------------------------------------------------------------
 
 #include <stddef.h>
+#include <stdint.h>
 #include <tiffio.h>
 #include <emTiff/emTiffImageFileModel.h>
 #include <emCore/emThread.h>
