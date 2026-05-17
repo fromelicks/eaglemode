@@ -4,8 +4,10 @@
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
   "remoteUser": "builder",
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+  ],
   "remoteEnv": {
-    // Set DISPLAY for X11 forwarding (e.g. DISPLAY=:0 on the host)
     "DISPLAY": "${localEnv:DISPLAY}"
   },
   "postCreateCommand": "perl make.pl build cpus=auto",
